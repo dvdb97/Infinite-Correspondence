@@ -22,5 +22,7 @@ def upload_dataframe(spreadsheet: gs.Worksheet, ws_name, table_name, df: pd.Data
 
     if header is not None:
         table = [header] + table
+
+    print(table)
     
     worksheet.update(table_name, table)

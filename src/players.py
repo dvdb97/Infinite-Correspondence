@@ -11,14 +11,17 @@ def update_player_data(client: Client, spreadsheet):
 
     df = df.set_index(['id'])
 
-    print(df)
-
     for id in df.index:
         player = client.users.get_by_id(id)[0]
-
+        
         df.loc[id, 'name'] = player['username']
-        df.loc[id, 'corr_rtg'] = player['perfs']['correspondence']['rating']
-        df.loc[id, 'class_rtg'] = player['perfs']['classical']['rating']
+
+        if 'disabled' in player and player['disabled']:
+            df.loc[id, 'corr_rtg'] = 1500
+            df.loc[id, 'class_rtg'] = 1500
+        else:
+            df.loc[id, 'corr_rtg'] = player['perfs']['correspondence']['rating']
+            df.loc[id, 'class_rtg'] = player['perfs']['classical']['rating']
 
     df = df.reset_index()
 

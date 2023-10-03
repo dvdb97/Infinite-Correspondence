@@ -3,6 +3,7 @@ auth/
 
 # Database stuff
 *.db
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
