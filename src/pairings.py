@@ -102,7 +102,7 @@ def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, floa
 
     # Connect two players with an edge iff they don't prefer the same color and haven't been matched recently.
     for a, b in combinations(players, 2):
-        if b not in recent_k_opps[a] or b not in recent_k_opps[a]:
+        if b not in recent_k_opps[a] or a not in recent_k_opps[b]:
             G.add_edge(a, b, weight=abs(rtgs[a]-rtgs[b]))
 
     # Compute the pairings with a min weight matching on the created graph.
