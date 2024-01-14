@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Set
 from itertools import combinations
 from functools import total_ordering
 
@@ -24,6 +24,24 @@ class ColorPref(Enum):
         return NotImplemented
 
 
+def get_active_pairings(df: pd.DataFrame, players) -> Set[Set[str]]:
+    """_summary_
+
+    Args:
+        df (pd.DataFrame): _description_
+        players (_type_): _description_
+
+    Returns:
+        Set[Set[str]]: _description_
+    """
+    df_filtered = df[(df['White'].isin(players) | df['Black'].isin(players))]
+    df_filtered = df_filtered[df_filtered['Results'].isin({'game', None, ''})]
+
+    active_games = {(row['White'], row['Black']) for _, row in df_filtered.iterrows()}
+
+    return active_games
+
+
 def get_k_recent_opponents(df: pd.DataFrame, players, k=5) -> Dict[str, List[str]]:
     """Extracts the recent k opponents for each players from the spreadsheet.
 
@@ -37,7 +55,7 @@ def get_k_recent_opponents(df: pd.DataFrame, players, k=5) -> Dict[str, List[str
         player.
     """
     df_filtered = df[(df['White'].isin(players) | df['Black'].isin(players))]
-    df_sorted = df_filtered.sort_values(by='Start_Date', ascending=False)
+    df_sorted = df_filtered.sort_values(by='Round', ascending=False)
 
     recent_opps = dict()
 
@@ -97,12 +115,15 @@ def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, floa
     recent_k_opps = get_k_recent_opponents(df, players)
     print(recent_k_opps)
 
+    active_games = get_active_pairings(df, players)
+    print(active_games)
+
     G = nx.Graph()
     G.add_nodes_from(players)
 
     # Connect two players with an edge iff they don't prefer the same color and haven't been matched recently.
     for a, b in combinations(players, 2):
-        if b not in recent_k_opps[a] or b not in recent_k_opps[b]:
+        if (b not in recent_k_opps[a] or a not in recent_k_opps[b]):
             G.add_edge(a, b, weight=abs(rtgs[a]-rtgs[b]))
 
     # Compute the pairings with a min weight matching on the created graph.
