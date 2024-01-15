@@ -74,7 +74,7 @@ def get_k_recent_opponents(df: pd.DataFrame, players, k=5) -> Dict[str, List[str
 
 def get_recent_game(df, player_a, player_b):
     players = { player_a, player_b }
-    df_filtered = df[(df['White'].isin(players) | df['Black'].isin(players))]
+    df_filtered = df[(df['White'].isin(players) & df['Black'].isin(players))]
     df_sorted = df_filtered.sort_values(by='Start_Date', ascending=False)
 
     if len(df_sorted) == 0:
@@ -135,9 +135,9 @@ def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, floa
 
         if recent_game != None:
             if recent_game[0] == a:
-                print(f'@{ a } vs @{ b }')
-            else:
                 print(f'@{ b } vs @{ a }')
+            else:
+                print(f'@{ a } vs @{ b }')
         elif col_pref[a] <= col_pref[b]:
             print(f'@{ a } vs @{ b }')
         else:
