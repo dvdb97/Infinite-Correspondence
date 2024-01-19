@@ -9,11 +9,7 @@ You will need:
 
 Then run:
 
-- `pip install gspread`
-- `pip install berserk`
-- `pip install pandas`
-- `pip install networkx`
-- `pip install matplotlib.pyplot`
+- `pip install gspread berserk chess pandas networkx matplotlib.pyplot`
 
 ## Workflow
 
