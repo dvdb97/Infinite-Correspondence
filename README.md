@@ -9,7 +9,7 @@ You will need:
 
 Then run:
 
-- `pip install gspread berserk chess pandas networkx matplotlib.pyplot`
+- `pip install gspread berserk chess pandas networkx matplotlib`
 
 ## Workflow
 
