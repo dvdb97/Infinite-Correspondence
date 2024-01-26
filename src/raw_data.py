@@ -11,12 +11,12 @@ def update_raw_data(client, spreadsheet):
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
 
-    for game in client.games.export_multi(*df[df['Round'] > 25].index, evals=True, opening=True):
+    for game in client.games.export_multi(*df[df['Round'] > 40].index, evals=True, opening=True):
         game_id = game['id']
 
 
         start_date = game['createdAt'].timestamp()
-        df.loc[game_id, 'Start_Date'] = round(start_date)
+        df.loc[game_id, 'Start_Date'] = int(round(start_date))
 
         moves = game['moves'].split(' ')
 
@@ -32,8 +32,8 @@ def update_raw_data(client, spreadsheet):
 
         if status != 'started':
             if 'analysis' in players['white']:
-                df.loc[game_id, 'White_Accuracy'] = players['white']['analysis']['acpl']
-                df.loc[game_id, 'Black_Accuracy'] = players['black']['analysis']['acpl']
+                df.loc[game_id, 'White_Accuracy'] = int(players['white']['analysis']['acpl'])
+                df.loc[game_id, 'Black_Accuracy'] = int(players['black']['analysis']['acpl'])
 
                 w_comp, b_comp = compute_compensation(game)
 
@@ -52,8 +52,8 @@ def update_raw_data(client, spreadsheet):
 
             # Update when the game terminated and how long it lasted.
             termination_date = game['lastMoveAt'].timestamp()
-            df.loc[game_id, 'Termination_Date'] = round(termination_date)
-            df.loc[game_id, 'Duration'] = round(termination_date) - round(start_date)
+            df.loc[game_id, 'Termination_Date'] = int(round(termination_date))
+            df.loc[game_id, 'Duration'] = int(round(termination_date) - round(start_date))
 
             df.loc[game_id, 'Opening'] = game['opening']['eco']
 
