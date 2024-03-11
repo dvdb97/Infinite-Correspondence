@@ -1,4 +1,5 @@
 import pandas as pd
+import math
 
 from apis import init_lichess_api, init_gspread_api
 from awards import compute_compensation
@@ -28,6 +29,9 @@ def update_raw_data(client, spreadsheet):
             df.loc[game_id, 'W_Move_1'] = moves[0]
             df.loc[game_id, 'B_Move_1'] = moves[1]
 
+            df.loc[game_id, 'w_total_moves'] = math.ceil(len(moves)/2)
+            df.loc[game_id, 'b_total_moves'] = math.floor(len(moves)/2)
+
         status = game['status']
 
         if status != 'started':
@@ -39,6 +43,9 @@ def update_raw_data(client, spreadsheet):
 
                 df.loc[game_id, 'w_comp'] = w_comp
                 df.loc[game_id, 'b_comp'] = b_comp
+
+                df.loc[game_id, 'w_total_CPL'] = int(players['white']['analysis']['acpl']) * math.ceil(len(moves)/2)
+                df.loc[game_id, 'b_total_CPL'] = int(players['black']['analysis']['acpl']) * math.floor(len(moves)/2)
 
             # Update the game results.
             if status in {'resign', 'cheat', 'outoftime', 'mate'}:
