@@ -153,10 +153,7 @@ if __name__ == '__main__':
 
     players = [player.lower() for player in df['Player']]
     pwr_rtgs = pd.to_numeric(df['Power Score']) 
-    colors = map(
-        lambda c: ColorPref.WHITE if c <= -1 else (ColorPref.BLACK if c >= 1 else ColorPref.NEUTRAL), 
-        pd.to_numeric(df['Color Score'])
-    )
+    colors = pd.to_numeric(df['Color Score'])
 
     df, _ = download_as_dataframe(spreadsheet, 'RawData', 'RawData')
     df = df.set_index(['ID'])
