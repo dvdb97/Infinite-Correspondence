@@ -30,6 +30,8 @@ This is the main script that keeps track of the games. What we still need to do 
 
 Then you can run the script. Previously there was a bug where the columns 'White_Accuracy', 'Black_Accuracy', 'Start_Date', 'Termination_Date', 'Duration', 'w_comp', and 'b_comp' were not being formatted as Integer columns. This would sometimes break other parts of the spreadsheet. If this occurs, you can fix this manually by selecting those columns and then going 'Format' -> 'Number' -> 'Custom number format'.
 
+Sometimes the api call doesn't retrieve the latest games because you can only retrieve a certain amount of games at a time. If you notice that to be the case, up the number on line 15 of the script (usually by 5 or 10).
+
 ### pairings.py
 
 This script is run each week to generate the pairings. To have the most up to date pairings, run players.py and raw_data.py first. If there is an odd number of players, find someone to pair twice, pair them against another player, set that player temporarily to inactive and run the pairing script again.
