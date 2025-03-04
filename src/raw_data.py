@@ -12,7 +12,7 @@ def update_raw_data(client, spreadsheet):
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
 
-    for game in client.games.export_multi(*df[df['Round'] > 90].index, evals=True, opening=True):
+    for game in client.games.export_multi(*df[df['Round'] > 100].index, evals=True, opening=True):
         game_id = game['id']
 
 
