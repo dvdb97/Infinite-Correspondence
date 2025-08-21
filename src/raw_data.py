@@ -7,14 +7,13 @@ from gspread_utils import download_as_dataframe, upload_dataframe
 
 
 def update_raw_data(client, spreadsheet):
-    df, header = download_as_dataframe(spreadsheet, 'RawData', 'RawData')
+    df, header = download_as_dataframe(spreadsheet, 'PythonUpdate', 'PythonUpdate')
 
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
 
     for game in client.games.export_multi(*df[df['Round'] > 110].index, evals=True, opening=True):
         game_id = game['id']
-
 
         start_date = game['createdAt'].timestamp()
         df.loc[game_id, 'Start_Date'] = int(round(start_date))
@@ -48,10 +47,13 @@ def update_raw_data(client, spreadsheet):
                 df.loc[game_id, 'b_total_CPL'] = int(players['black']['analysis']['acpl']) * math.floor(len(moves)/2)
 
             # Update the game results.
-            if status in {'resign', 'cheat', 'outoftime', 'mate'}:
-                df.loc[game_id, 'Results'] = '0 - 1' if game['winner'] == 'black' else '1 - 0'
-            else:
-                df.loc[game_id, 'Results'] = '1/2 - 1/2'
+            try:
+                if status in {'resign', 'cheat', 'outoftime', 'mate'}:
+                    df.loc[game_id, 'Results'] = '0 - 1' if game['winner'] == 'black' else '1 - 0'
+                else:
+                    df.loc[game_id, 'Results'] = '1/2 - 1/2'
+            except:
+                pass
 
             # Update the termination types.
             term_map = {'outoftime': 'Clock Flag', 'resign': 'Resign', 'mate': 'Mate', 'draw': 'Draw by Agreement', 'cheat': 'Banned'}
@@ -67,7 +69,7 @@ def update_raw_data(client, spreadsheet):
     df = df.reset_index()
     
     print(df)
-    upload_dataframe(spreadsheet, 'RawData', 'RawData', df, header)
+    upload_dataframe(spreadsheet, 'PythonUpdate', 'PythonUpdate', df, header)
 
 
 if __name__ == '__main__':
