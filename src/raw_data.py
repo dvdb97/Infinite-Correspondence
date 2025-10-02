@@ -56,7 +56,7 @@ def update_raw_data(client, spreadsheet):
                 pass
 
             # Update the termination types.
-            term_map = {'outoftime': 'Clock Flag', 'resign': 'Resign', 'mate': 'Mate', 'draw': 'Draw by Agreement', 'cheat': 'Banned'}
+            term_map = {'outoftime': 'Clock Flag', 'resign': 'Resign', 'mate': 'Mate', 'draw': 'Draw by Agreement', 'cheat': 'Banned', 'insufficientMaterialClaim': 'Draw by insufficient material'}
             df.loc[game_id, 'Termination'] = term_map[status]
 
             # Update when the game terminated and how long it lasted.
