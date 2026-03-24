@@ -83,9 +83,14 @@ def get_recent_game(df, player_a, player_b):
     return df_sorted['White'].iloc[0], df_sorted['Black'].iloc[0]
 
 
-def plot_pairings_graph(G):
-    edge_labels = {(a, b): weight for a, b, weight in G.edges(data='weight') if weight < 100}
-    node_labels = {node: node for node in G.nodes()}
+def plot_pairings_graph(G, pairing_players=None):
+    # Create a mapping of indices to player names if provided
+    if pairing_players:
+        node_labels = {i: pairing_players[i] for i in G.nodes()}
+        edge_labels = {(a, b): weight for a, b, weight in G.edges(data='weight') if weight < 100}
+    else:
+        edge_labels = {(a, b): weight for a, b, weight in G.edges(data='weight') if weight < 100}
+        node_labels = {node: node for node in G.nodes()}
 
     pos = nx.circular_layout(G)
     nx.draw_networkx_nodes(G, pos)
@@ -100,34 +105,77 @@ def plot_pairings_graph(G):
     plt.show()
 
 
-def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, float], col_pref: Dict[str, ColorPref]):
+def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, float], col_pref: Dict[str, ColorPref], verbose: bool = True, exclude_pairings: set = None):
     """Generates pairings for the given players based on their ratings, recent opponents and color
     preferences. It constraints the potential pairings to not include pairings that have recently
-    occured.
+    occured. With odd numbers, one player will receive a 2nd pairing.
 
     Args:
         players (List[str]): The players to pair.
         rtgs (Dict[str, float]): The player's ratings.
         cols_pref (Dict[str, int]): The color preference for each player.
+        verbose (bool): Whether to print debug info and show graph. Defaults to True.
+        exclude_pairings (set): Set of tuples representing pairings to exclude (e.g., from previous round).
     """
-    assert len(players) % 2 == 0, "Number of players can't be odd!"
+    if exclude_pairings is None:
+        exclude_pairings = set()
+    
+    pairing_players = players.copy()
+    double_pairing_player = None
+    
+    # Handle odd number of players
+    if len(players) % 2 != 0:
+        if verbose:
+            print(f"\nOdd number of players ({len(players)}). One player will receive a 2nd pairing.")
+            print(f"Available players: {', '.join(players)}")
+        
+        while True:
+            player_input = input(f"Enter the username of the player who should receive a 2nd pairing: ").lower()
+            if player_input in players:
+                double_pairing_player = player_input
+                # Add the player twice to the list so they get paired twice
+                pairing_players.append(double_pairing_player)
+                if verbose:
+                    print(f"{double_pairing_player} will receive a 2nd pairing\n")
+                break
+            else:
+                print(f"Player '{player_input}' not found. Please enter a valid username.")
+    
+    assert len(pairing_players) % 2 == 0, "Number of pairing players must be even!"
 
     recent_k_opps = get_k_recent_opponents(df, players)
-    print(recent_k_opps)
+    if verbose:
+        print(recent_k_opps)
 
     active_games = get_active_pairings(df, players)
-    print(active_games)
+    if verbose:
+        print(active_games)
 
     G = nx.Graph()
-    G.add_nodes_from(players)
+    G.add_nodes_from(range(len(pairing_players)))  # Use indices instead of player names
 
     # Connect two players with an edge iff they don't prefer the same color and haven't been matched recently.
-    for a, b in combinations(players, 2):
+    for i, j in combinations(range(len(pairing_players)), 2):
+        a = pairing_players[i]
+        b = pairing_players[j]
+        
+        # Prevent a player from being paired with themselves (if they have 2 slots)
+        if a == b:
+            continue
+        
+        # Prevent pairings that should be excluded (e.g., from previous round)
+        pairing = frozenset([a, b])
+        if pairing in exclude_pairings:
+            continue
+            
         if b not in recent_k_opps[a] or a not in recent_k_opps[b]:
-            G.add_edge(a, b, weight=abs(rtgs[a]-rtgs[b]))
+            G.add_edge(i, j, weight=abs(rtgs[a]-rtgs[b]))
 
     # Compute the pairings with a min weight matching on the created graph.
-    pairings = nx.algorithms.matching.min_weight_matching(G)
+    pairings_indices = nx.algorithms.matching.min_weight_matching(G)
+    
+    # Convert indices back to player names
+    pairings = [(pairing_players[i], pairing_players[j]) for i, j in pairings_indices]
 
     # pretty print the pairings.
     for a, b in pairings:
@@ -143,7 +191,45 @@ def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, floa
         else:
             print(f'@{ b } vs @{ a }')
 
-    plot_pairings_graph(G)
+    if verbose:
+        plot_pairings_graph(G, pairing_players)
+    
+    return pairings
+
+
+def generate_double_round_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, float], col_pref: Dict[str, ColorPref]):
+    """Generates pairings for a double round, with round 2 avoiding round 1 pairings.
+
+    Args:
+        df (pd.DataFrame): The games dataframe.
+        players (List[str]): The players to pair.
+        rtgs (Dict[str, float]): The player's ratings.
+        col_pref (Dict[str, ColorPref]): The color preference for each player.
+    """
+    print("=" * 50)
+    print("ROUND 1")
+    print("=" * 50)
+    pairings_round1 = generate_pairings(df, players, rtgs, col_pref, verbose=False)
+    
+    # Convert pairings to a set of frozensets for comparison (order doesn't matter)
+    exclude_pairings = {frozenset([a, b]) for a, b in pairings_round1}
+    
+    # Ask user to exclude players from Round 2
+    print("\n" + "=" * 50)
+    print("ROUND 2 - PLAYER EXCLUSIONS")
+    print("=" * 50)
+    exclusion_input = input("Enter comma-separated list of players to exclude from Round 2 (or press Enter to include all): ").strip()
+    
+    excluded_players = set()
+    if exclusion_input:
+        excluded_players = {p.strip().lower() for p in exclusion_input.split(',')}
+    
+    players_for_round2 = [p for p in players if p not in excluded_players]
+    
+    print("\n" + "=" * 50)
+    print("ROUND 2")
+    print("=" * 50)
+    pairings_round2 = generate_pairings(df, players_for_round2, rtgs, col_pref, verbose=False, exclude_pairings=exclude_pairings)
 
 
 if __name__ == '__main__':
@@ -159,6 +245,15 @@ if __name__ == '__main__':
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
 
+    # Uncomment the line below if a double round is needed
+    # generate_double_round_pairings(
+    #     df,
+    #     players, 
+    #     {player: rtg for player, rtg in zip(players, pwr_rtgs)}, 
+    #     {player: c for player, c in zip(players, colors)}
+    # )
+    
+    # For single round, uncomment the line below and comment out the generate_double_round_pairings call
     generate_pairings(
         df,
         players, 

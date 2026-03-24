@@ -10,6 +10,13 @@ def download_as_dataframe(spreadsheet, ws_name, table_name) -> Tuple[pd.DataFram
     worksheet = spreadsheet.worksheet(ws_name)
     table = worksheet.get(table_name)
     df = pd.DataFrame(table[1:], columns=table[0])
+    
+    # Replace Google Sheets error values with empty strings
+    df = df.replace('#N/A', '')
+    df = df.replace('#DIV/0!', '')
+    df = df.replace('#REF!', '')
+    df = df.replace('#VALUE!', '')
+    df = df.replace('#ERROR!', '')
 
     return df, table[0]
 

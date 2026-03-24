@@ -11,6 +11,12 @@ def update_raw_data(client, spreadsheet):
 
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
+    
+    # Convert numeric columns to proper dtype to avoid cross-platform issues
+    numeric_cols = ['Start_Date', 'Termination_Date', 'Duration', 'White_Accuracy', 'Black_Accuracy', 'w_comp', 'b_comp', 'w_total_CPL', 'b_total_CPL', 'w_total_moves', 'b_total_moves']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
 
     for game in client.games.export_multi(*df[df['Round'] > 140].index, evals=True, opening=True):
         game_id = game['id']
@@ -67,6 +73,9 @@ def update_raw_data(client, spreadsheet):
             df.loc[game_id, 'Opening'] = game['opening']['eco']
 
     df = df.reset_index()
+    
+    # Replace NaN values with empty strings before uploading
+    df = df.fillna('')
     
     print(df)
     upload_dataframe(spreadsheet, 'PythonUpdate', 'PythonUpdate', df, header)
