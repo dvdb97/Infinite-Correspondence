@@ -18,7 +18,7 @@ def update_raw_data(client, spreadsheet):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    for game in client.games.export_multi(*df[df['Round'] > 140].index, evals=True, opening=True):
+    for game in client.games.export_multi(*df[df['Round'] > 150].index, evals=True, opening=True):
         game_id = game['id']
 
         start_date = game['createdAt'].timestamp()
