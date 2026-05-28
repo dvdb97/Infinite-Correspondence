@@ -241,7 +241,7 @@ if __name__ == '__main__':
     pwr_rtgs = pd.to_numeric(df['Power Score']) 
     colors = pd.to_numeric(df['Color Score'])
 
-    df, _ = download_as_dataframe(spreadsheet, 'RawData', 'RawData')
+    df, _ = download_as_dataframe(spreadsheet, 'PythonUpdate', 'PythonUpdate')
     df = df.set_index(['ID'])
     df['Round'] = pd.to_numeric(df['Round'])
 

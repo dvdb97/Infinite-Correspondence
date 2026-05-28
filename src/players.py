@@ -9,6 +9,11 @@ from gspread_utils import download_as_dataframe, upload_dataframe
 def update_player_data(client: Client, spreadsheet):
     df, header = download_as_dataframe(spreadsheet, 'Players_Backend', 'PlayersRaw')
 
+    # Sheets values are loaded as strings; convert rating columns so numeric writes are valid.
+    for col in ['corr_rtg', 'class_rtg']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
     df = df.set_index(['id'])
 
     for id in df.index:

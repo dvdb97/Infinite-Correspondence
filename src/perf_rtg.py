@@ -36,8 +36,5 @@ def compute_historical_rankings():
     df, _ = download_as_dataframe(sh, 'RawData', 'RawData')
     df.sort_values("Termination_Date", axis=0, inplace=True)
 
-    for row in df:
-        
-
 if __name__ == '__main__':
     compute_historical_rankings()
