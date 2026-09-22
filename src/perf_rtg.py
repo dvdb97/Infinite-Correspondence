@@ -1,6 +1,5 @@
 from apis import init_lichess_api, init_gspread_api
-from awards import compute_compensation
-from gspread_utils import download_as_dataframe, upload_dataframe
+from gspread_utils import download_as_dataframe
 
 
 scores = {

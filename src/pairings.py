@@ -7,8 +7,8 @@ from typing import List, Dict, Set
 from itertools import combinations
 from functools import total_ordering
 
-from apis import init_lichess_api, init_gspread_api
-from gspread_utils import download_as_dataframe, upload_dataframe
+from apis import init_gspread_api
+from gspread_utils import download_as_dataframe
 
 
 @total_ordering

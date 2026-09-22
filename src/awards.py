@@ -2,7 +2,7 @@ import chess
 
 from apis import init_lichess_api
 
-from typing import List, Dict
+from typing import Dict
 
 
 def get_material(board: chess.Board):

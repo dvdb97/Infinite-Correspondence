@@ -5,8 +5,6 @@ from gspread.exceptions import APIError
 
 from typing import List, Any, Tuple
 
-from apis import init_gspread_api
-
 
 def download_as_dataframe(spreadsheet, ws_name, table_name, max_retries=3, initial_backoff=1) -> Tuple[pd.DataFrame, List[Any]]:
     """
