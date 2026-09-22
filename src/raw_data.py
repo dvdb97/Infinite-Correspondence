@@ -10,7 +10,7 @@ def update_raw_data(client, spreadsheet):
     df, header = download_as_dataframe(spreadsheet, 'PythonUpdate', 'PythonUpdate')
 
     df = df.set_index(['ID'])
-    df['Round'] = pd.to_numeric(df['Round'])
+    df['Round'] = pd.to_numeric(df['Round'], errors='coerce')
     
     # Convert numeric columns to proper dtype to avoid cross-platform issues
     numeric_cols = ['Start_Date', 'Termination_Date', 'Duration', 'White_Accuracy', 'Black_Accuracy', 'w_comp', 'b_comp', 'w_total_CPL', 'b_total_CPL', 'w_total_moves', 'b_total_moves']
@@ -62,15 +62,29 @@ def update_raw_data(client, spreadsheet):
                 pass
 
             # Update the termination types.
-            term_map = {'outoftime': 'Clock Flag', 'resign': 'Resign', 'mate': 'Mate', 'draw': 'Draw by Agreement', 'cheat': 'Banned', 'insufficientMaterialClaim': 'Draw by insufficient material'}
-            df.loc[game_id, 'Termination'] = term_map[status]
+            term_map = {
+                'outoftime': 'Clock Flag',
+                'resign': 'Resign',
+                'mate': 'Mate',
+                'draw': 'Draw by Agreement',
+                'cheat': 'Banned',
+                'insufficientMaterialClaim': 'Draw by insufficient material',
+                'stalemate': 'Stalemate',
+                'timeout': 'Timeout',
+                'aborted': 'Aborted',
+                'noStart': 'No Start',
+                'unknownFinish': 'Unknown Finish',
+                'variantEnd': 'Variant End',
+            }
+            # Fall back to the raw status instead of raising KeyError on an unmapped/future status.
+            df.loc[game_id, 'Termination'] = term_map.get(status, status)
 
             # Update when the game terminated and how long it lasted.
             termination_date = game['lastMoveAt'].timestamp()
             df.loc[game_id, 'Termination_Date'] = int(round(termination_date))
             df.loc[game_id, 'Duration'] = int(round(termination_date) - round(start_date))
 
-            df.loc[game_id, 'Opening'] = game['opening']['eco']
+            df.loc[game_id, 'Opening'] = game.get('opening', {}).get('eco', '')
 
     df = df.reset_index()
     
