@@ -168,7 +168,7 @@ def generate_pairings(df: pd.DataFrame, players: List[str], rtgs: Dict[str, floa
         if pairing in exclude_pairings:
             continue
             
-        if b not in recent_k_opps[a] or a not in recent_k_opps[b]:
+        if b not in recent_k_opps[a] and a not in recent_k_opps[b]:
             G.add_edge(i, j, weight=abs(rtgs[a]-rtgs[b]))
 
     # Compute the pairings with a min weight matching on the created graph.
@@ -260,4 +260,3 @@ if __name__ == '__main__':
         {player: rtg for player, rtg in zip(players, pwr_rtgs)}, 
         {player: c for player, c in zip(players, colors)}
     )
-

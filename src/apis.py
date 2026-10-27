@@ -32,7 +32,7 @@ def init_lichess_api() -> Client:
 
 def init_gspread_api() -> Spreadsheet:
     gc = gspread.service_account()
-    gc.set_timeout(30)  # gspread has no default timeout; avoid indefinite hangs on stalled requests.
+    gc.set_timeout(60)  # gspread has no default timeout; avoid indefinite hangs on stalled requests.
     sh = gc.open("Lichess4545 - Infinite Correspondence")
 
     return sh
